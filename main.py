@@ -25,8 +25,10 @@ stealth(driver,
 
 def example1bs4():
 
-    soup = BeautifulSoup(requests.get("").content, "html.parser")
-    countries = soup.findAll("", class_="")
+    soup = BeautifulSoup(requests.get("https://www.scrapethissite.com/pages/simple/").content, "html.parser")
+
+    countries = soup.findAll("div", class_="country")
+    
     if(countries):
         print("Succesfully found countries")
 
@@ -34,43 +36,43 @@ def example1bs4():
   
 
 
-    sorted_countries_by_area = sorted(countries, key=lambda country: float(country.find(class_="").get_text(strip = True)))
+    sorted_countries_by_area = sorted(countries, key=lambda country: float(country.find(class_="country-area").get_text(strip = True)))
 
 
     for country in sorted_countries_by_area:
-        name = ...
-        area = ...
-        print(f"{name}: {area}")
+        name = country.find(class_="country-name")
+        area = country.find(class_="country-area")
+        print(f"{name.get_text(strip = True)}: {area.get_text(strip = True)}")
 
 
 
 
 def example1selenium():
-    driver.get("")
-    countries = driver.find_elements(...,"")
-    if(...):
+    driver.get("https://www.scrapethissite.com/pages/simple/")
+    countries = driver.find_elements(By.CLASS_NAME,"country")
+    if(countries):
         print("Succesfully found countries!")
 
     else:
         print("Elements not found.")
 
 
-    sorted_countries_by_area = sorted(countries, key=lambda country: float(country.find_element(By.CLASS_NAME, ...).text.replace(',', '')))
+    sorted_countries_by_area = sorted(countries, key=lambda country: float(country.find_element(By.CLASS_NAME, "country-area").text.replace(',', '')))
 
     for country in sorted_countries_by_area:
-        name = ...
-        area = ...
+        name = country.find_element(By.CLASS_NAME,"country-name").text
+        area = country.find_element(By.CLASS_NAME,"country-area").text
         print(f"{name}: {area}")
 
 
 def example2selenium():
 
-    driver.get("")
-    myTable = driver.find_element(..., "")
+    driver.get("https://www.scrapethissite.com/pages/forms/")
+    myTable = driver.find_element(By.CLASS_NAME, "table")
 
     # Extract rows
-    rows = myTable.find_elements(..., "")
-    headers = myTable.find_elements(..., "")
+    rows = myTable.find_elements(By.TAG_NAME,"tr")
+    headers = myTable.find_elements(By.TAG_NAME,"th")
 
     # Extract header row
     header_row = []
@@ -85,10 +87,10 @@ def example2selenium():
 
 
     for row in rows:
-        cells = row.find_elements(..., "")  # Use "th" for headers
+        cells = row.find_elements(By.TAG_NAME, "td")  # Use "th" for headers
         row_data = []
         for cell in cells:
-            row_data.append(...)
+            row_data.append(cell.text)
         
         if row_data:  # Remove empty rows
             table_data.append(row_data)
@@ -118,43 +120,41 @@ def example2selenium():
 
 
 def example2bs4():
-    url = ""
+    url = "https://www.scrapethissite.com/pages/forms/"
     response = requests.get(url)
     # Parse the HTML content with BeautifulSoup
-    soup = BeautifulSoup(..., "html.parser")
+    soup = BeautifulSoup(response.content, "html.parser")
     
     # Find the table
-    my_table = soup.find("")
+    my_table = soup.find("table")
 
     # Extract headers (if any)
-    headers = my_table.find_all("")
+    headers = my_table.find_all("th")
 
     header_row = []
 
     if(headers):
         for header in headers:
-            header_row.append(...)
+            header_row.append(header.text.strip())
 
     # Extract table rows
-    rows = my_table.find_all("")
+    rows = my_table.find_all("tr")
     
     # Process the table data
     table_data = []
     for row in rows:
-        cells = row.find_all("")
+        cells = row.find_all("td")
         cells_text = []
 
         for cell in cells:
-            cells_text.append(...)
+            cells_text.append(cell.text.strip())
 
 
         table_data.append(cells_text)
 
     row_data = []
     
-    for cell in cells:
-        row_data.append(...)
-    
+
     if row_data:  # Ensure the row is not empty
         table_data.append(row_data)
 
@@ -168,7 +168,7 @@ def example2bs4():
         print(i)
     
     # Save to CSV
-    with open("", "", newline="", encoding="utf-8") as file:
+    with open("scraped_table.csv", "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         
         # Write headers if present
@@ -184,6 +184,7 @@ def example2bs4():
     
 
 def playerLookup():
+
     playertofind = input("Enter the name of a NBA player currently playing:")
     driver.get("https://www.nba.com/players")
 
@@ -195,23 +196,38 @@ def playerLookup():
     driver.refresh()
     driver.refresh()    
 
-'''
-   Hints to get you started:
+    #Find the searchbar
 
-   Not only can selenium dynamically scrape/crawl websites but it can also interact with the browser.
+    searchbar = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "Block_blockAd__1Q_77")))
+    searchbar.click()
+    time.sleep(1)
+    input_field = searchbar.find_element(By.TAG_NAME,"div")
+    input_field = input_field.find_element(By.TAG_NAME,"input")
+    time.sleep(3)
+    input_field.click()
 
-   Use .click() on an element to click it.
-   for example, if you lets say scrape a button called searchButton: searchButton.click()
+    
+    for letter in playertofind:
+        driver.execute_script("arguments[0].value += arguments[1];", input_field, letter)
+        time.sleep(0.2) 
+    
+    
 
-   You can also send keystrokes into a form/input field, so for example if we found an element named textBox: textBox.sendkeys("Your String") would send the string into the textbox.
-   
-   
-   
-   '''
+    
 
+    input_field.send_keys(" ")
 
+    playerTable = driver.find_element(By.CLASS_NAME,"players-list")
+    time.sleep(1)
+    playerbio = playerTable.find_element(By.TAG_NAME,"tbody").find_elements(By.TAG_NAME,"td")
+    playername = playerbio[0].text
+    playername = playername.lstrip()
+    playername = playername.rstrip()
+    print(playername)
+    playerlink = playerbio[0].find_element(By.TAG_NAME,"a").get_attribute("href")
+    print(playerlink)
+    print(f"Player Info: \n Name-{playername}, Team-{playerbio[1].text}, Number-{playerbio[2].text}, Position-{playerbio[3].text}, Player Link:{playerlink}")
 
-driver.get("https://www.google.com")
-
+playerLookup()
 
 input("Press Enter to exit...")
