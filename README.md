@@ -48,3 +48,8 @@ pip3 install -r requirements.txt
 
 If you have done everything correctly, you should be good to go! Whether you want to code along with me or play around with the tools on your own is up to you, but I hope this workshop taught you something new and gave you motivation to get out there and build your own projects!
 
+Post-Event:
+
+Below, is the link to the slideshow I went through in the workshop
+
+https://docs.google.com/presentation/d/1ot-h7m43E60LsYPZgMDAm8EeiIy6eVBXiEiqu0HEB1Q/edit?usp=sharing
